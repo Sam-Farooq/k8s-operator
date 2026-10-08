@@ -1,0 +1,21 @@
+# Go build and test output
+/bin/
+*.test
+*.out
+coverage.txt
+
+# Go caches, when GOCACHE or GOPATH are pointed inside the tree
+/.gocache/
+/.gopath/
+
+# envtest control plane binaries, fetched by `make envtest`
+/bin/k8s/
+/testbin/
+
+# golangci-lint cache
+/.golangci-cache/
+
+# editor and OS noise
+.vscode/
+.idea/
+.DS_Store
