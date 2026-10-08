@@ -308,7 +308,7 @@ func TestDumpScriptOrdering(t *testing.T) {
 	if dump < 0 || rename < 0 || prune < 0 {
 		t.Fatal("the script lost one of its three steps")
 	}
-	if !(dump < rename && rename < prune) {
+	if dump >= rename || rename >= prune {
 		t.Fatalf("script order is dump=%d rename=%d prune=%d; a prune before the rename deletes a backup to make room for one that does not exist yet", dump, rename, prune)
 	}
 	if !strings.HasPrefix(dumpScript, "set -eu\n") {

@@ -141,8 +141,8 @@ func (f *field) addRange(part string, b bound) error {
 	}
 
 	lo, hi := b.min, b.max
-	switch {
-	case spec == "*":
+	switch spec {
+	case "*":
 		// A bare "*" leaves the field unrestricted; "*/n" does not, because
 		// it selects a subset.
 		if hasStep {

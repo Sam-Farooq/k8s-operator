@@ -73,7 +73,7 @@ func newHarness(t *testing.T, mutate func(*opsv1alpha1.PostgresBackup)) *harness
 		}
 		return broken
 	}
-	first, err := sched.Next(pb.CreationTimestamp.Time.UTC())
+	first, err := sched.Next(pb.CreationTimestamp.UTC())
 	if err != nil {
 		t.Fatalf("the fixture schedule has no next slot: %v", err)
 	}

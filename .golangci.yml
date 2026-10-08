@@ -1,0 +1,37 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: standard
+  enable:
+    - copyloopvar
+    - errorlint
+    - gocritic
+    - misspell
+    - nilerr
+    - revive
+    - unconvert
+    - unparam
+    - usestdlibvars
+    - whitespace
+  settings:
+    revive:
+      rules:
+        - name: exported
+        - name: var-naming
+        - name: indent-error-flow
+        - name: error-strings
+  exclusions:
+    rules:
+      # Table driven tests shadow the loop variable deliberately and assert
+      # on it immediately, and a test's helpers do not need doc comments.
+      - path: _test\.go$
+        linters:
+          - unparam
+          - revive
+
+formatters:
+  enable:
+    - gofmt

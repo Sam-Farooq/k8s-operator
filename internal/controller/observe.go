@@ -81,7 +81,7 @@ func slotOf(job *batchv1.Job) time.Time {
 			return t.UTC()
 		}
 	}
-	return job.CreationTimestamp.Time.UTC()
+	return job.CreationTimestamp.UTC()
 }
 
 // phaseOf reads the Job's own conditions. Counting job.Status.Succeeded or

@@ -68,9 +68,9 @@ func decide(pb *opsv1alpha1.PostgresBackup, sched schedule.Schedule, obs observa
 	// The floor is the last slot acted on, or the object's creation. Using
 	// creation rather than the zero time is what stops a new PostgresBackup
 	// with a yearly schedule from immediately running the slot from January.
-	floor := pb.CreationTimestamp.Time.UTC()
+	floor := pb.CreationTimestamp.UTC()
 	if pb.Status.LastScheduleTime != nil {
-		floor = pb.Status.LastScheduleTime.Time.UTC()
+		floor = pb.Status.LastScheduleTime.UTC()
 	}
 
 	latest, err := sched.Latest(now)

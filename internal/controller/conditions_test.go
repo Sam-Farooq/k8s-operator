@@ -166,10 +166,23 @@ func TestConditionsReasonsAreTokens(t *testing.T) {
 	status := conditionsFor(sample(), obs, decision{act: actionNone})
 	for _, c := range status.Conditions {
 		for _, r := range c.Reason {
-			if !(r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9') {
+			if !isAlphanumeric(r) {
 				t.Errorf("condition %s has reason %q, which is not a CamelCase token", c.Type, c.Reason)
 				break
 			}
 		}
+	}
+}
+
+func isAlphanumeric(r rune) bool {
+	switch {
+	case r >= 'a' && r <= 'z':
+		return true
+	case r >= 'A' && r <= 'Z':
+		return true
+	case r >= '0' && r <= '9':
+		return true
+	default:
+		return false
 	}
 }
