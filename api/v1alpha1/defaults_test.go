@@ -44,7 +44,16 @@ func TestGeneratedCRDDefaultsMatchTheConstants(t *testing.T) {
 		{[]string{"source", "sslMode"}, `"require"`},
 		{[]string{"source", "usernameKey"}, `"username"`},
 		{[]string{"source", "passwordKey"}, `"password"`},
+		{[]string{"activeDeadlineSeconds"}, "3600"},
+		{[]string{"startingDeadlineSeconds"}, "600"},
+		{[]string{"suspend"}, "false"},
 	}
+	// Every default in the CRD has to be in the table above, or a default
+	// could be added to a marker and never checked against anything.
+	if n := countDefaults(spec); n != len(cases) {
+		t.Errorf("the CRD declares %d defaults under spec and the table covers %d", n, len(cases))
+	}
+
 	for _, c := range cases {
 		node := spec
 		for _, step := range c.path {
@@ -109,4 +118,19 @@ func TestZeroIsExpressibleOnEveryPointerField(t *testing.T) {
 	if got := spec.Retention.PruneFilesOrDefault(); got {
 		t.Error("pruneFiles false came back as true")
 	}
+}
+
+// countDefaults walks a schema and counts the defaults in it.
+func countDefaults(node apiextv1.JSONSchemaProps) int {
+	n := 0
+	if node.Default != nil {
+		n++
+	}
+	for _, child := range node.Properties {
+		n += countDefaults(child)
+	}
+	if node.Items != nil && node.Items.Schema != nil {
+		n += countDefaults(*node.Items.Schema)
+	}
+	return n
 }

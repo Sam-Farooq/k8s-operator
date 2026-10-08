@@ -7,6 +7,11 @@ SETUP_ENVTEST_VERSION    ?= release-0.20
 GOLANGCI_LINT_VERSION    ?= v2.14.0
 ENVTEST_K8S_VERSION      ?= 1.32.0
 
+# The files controller-gen owns. verify-manifests diffs exactly these, not all
+# of api/ and config/, so an uncommitted hand-written change does not look
+# like stale generator output.
+GENERATED := api/v1alpha1/zz_generated.deepcopy.go config/crd/bases config/rbac
+
 LOCALBIN       := $(CURDIR)/bin
 CONTROLLER_GEN := $(LOCALBIN)/controller-gen
 SETUP_ENVTEST  := $(LOCALBIN)/setup-envtest
@@ -46,7 +51,7 @@ manifests: $(CONTROLLER_GEN) ## Regenerate the CRD and the RBAC role.
 
 .PHONY: verify-manifests
 verify-manifests: manifests generate ## Fail if the committed generated files are stale.
-	git diff --exit-code -- api config
+	git diff --exit-code -- $(GENERATED)
 
 .PHONY: fmt
 fmt: ## Rewrite files with gofmt.
