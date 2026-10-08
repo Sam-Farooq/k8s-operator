@@ -43,13 +43,13 @@ func sample() *opsv1alpha1.PostgresBackup {
 			},
 			Retention: opsv1alpha1.RetentionSpec{
 				KeepSucceeded: 7,
-				KeepFailed:    3,
+				KeepFailed:    ptr(int32(3)),
 			},
 			ConcurrencyPolicy:       opsv1alpha1.ConcurrencyForbid,
 			StartingDeadlineSeconds: 600,
 			ActiveDeadlineSeconds:   3600,
-			BackoffLimit:            2,
-			CleanupTimeoutSeconds:   900,
+			BackoffLimit:            ptr(int32(2)),
+			CleanupTimeoutSeconds:   ptr(int64(900)),
 		},
 	}
 }

@@ -75,7 +75,9 @@ spec:
                 type: integer
               backoffLimit:
                 default: 2
-                description: BackoffLimit is passed to the Job.
+                description: |-
+                  BackoffLimit is passed to the Job. Zero means one attempt and no
+                  retry, so this is a pointer.
                 format: int32
                 maximum: 10
                 minimum: 0
@@ -87,6 +89,9 @@ spec:
                   go away before the finalizer is removed regardless. Past it the object
                   is deleted and the Jobs are reported as abandoned rather than the
                   object being stuck forever.
+
+                  Zero means never wait, which is the setting for a cluster where
+                  nobody is going to come and unstick a volume, so this is a pointer.
                 format: int64
                 maximum: 3600
                 minimum: 0
@@ -203,8 +208,9 @@ spec:
                   keepFailed:
                     default: 3
                     description: |-
-                      KeepFailed is how many failed Jobs are kept for their logs. Set it to
-                      zero and a failure is gone before anyone reads it.
+                      KeepFailed is how many failed Jobs are kept for their logs. Zero means
+                      a failure is gone before anyone reads it, which is a thing somebody
+                      will want, so this is a pointer.
                     format: int32
                     maximum: 100
                     minimum: 0
@@ -225,9 +231,12 @@ spec:
                       PruneFiles lets the Job delete older dump files in its own prefix after
                       a successful dump.
 
-                      It is a pointer because its default is true. A plain bool with
-                      omitempty marshals false as absent, the API server then applies the
-                      default, and pruneFiles: false silently becomes true.
+                      It is a pointer for the reason every pointer in this spec is one: with
+                      omitempty, a zero value marshals as absent, the API server applies the
+                      default, and the value comes back as its opposite. Every field whose
+                      zero is both legal and different from its default is a pointer here.
+                      The fields with a Minimum above zero are not, because for those there
+                      is no zero to express.
                     type: boolean
                 type: object
               schedule:

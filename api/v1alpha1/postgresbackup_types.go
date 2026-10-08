@@ -1,6 +1,8 @@
 package v1alpha1
 
 import (
+	"time"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -101,19 +103,23 @@ type RetentionSpec struct {
 	// +kubebuilder:default=7
 	KeepSucceeded int32 `json:"keepSucceeded,omitempty"`
 
-	// KeepFailed is how many failed Jobs are kept for their logs. Set it to
-	// zero and a failure is gone before anyone reads it.
+	// KeepFailed is how many failed Jobs are kept for their logs. Zero means
+	// a failure is gone before anyone reads it, which is a thing somebody
+	// will want, so this is a pointer.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=100
 	// +kubebuilder:default=3
-	KeepFailed int32 `json:"keepFailed,omitempty"`
+	KeepFailed *int32 `json:"keepFailed,omitempty"`
 
 	// PruneFiles lets the Job delete older dump files in its own prefix after
 	// a successful dump.
 	//
-	// It is a pointer because its default is true. A plain bool with
-	// omitempty marshals false as absent, the API server then applies the
-	// default, and pruneFiles: false silently becomes true.
+	// It is a pointer for the reason every pointer in this spec is one: with
+	// omitempty, a zero value marshals as absent, the API server applies the
+	// default, and the value comes back as its opposite. Every field whose
+	// zero is both legal and different from its default is a pointer here.
+	// The fields with a Minimum above zero are not, because for those there
+	// is no zero to express.
 	// +kubebuilder:default=true
 	PruneFiles *bool `json:"pruneFiles,omitempty"`
 }
@@ -162,11 +168,12 @@ type PostgresBackupSpec struct {
 	// +kubebuilder:default=3600
 	ActiveDeadlineSeconds int64 `json:"activeDeadlineSeconds,omitempty"`
 
-	// BackoffLimit is passed to the Job.
+	// BackoffLimit is passed to the Job. Zero means one attempt and no
+	// retry, so this is a pointer.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=10
 	// +kubebuilder:default=2
-	BackoffLimit int32 `json:"backoffLimit,omitempty"`
+	BackoffLimit *int32 `json:"backoffLimit,omitempty"`
 
 	// Suspend stops new Jobs being created. A Job already running is left to
 	// finish, because killing a dump halfway is the thing this operator will
@@ -178,10 +185,13 @@ type PostgresBackupSpec struct {
 	// go away before the finalizer is removed regardless. Past it the object
 	// is deleted and the Jobs are reported as abandoned rather than the
 	// object being stuck forever.
+	//
+	// Zero means never wait, which is the setting for a cluster where
+	// nobody is going to come and unstick a volume, so this is a pointer.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=3600
 	// +kubebuilder:default=900
-	CleanupTimeoutSeconds int64 `json:"cleanupTimeoutSeconds,omitempty"`
+	CleanupTimeoutSeconds *int64 `json:"cleanupTimeoutSeconds,omitempty"`
 
 	// ServiceAccountName is the account the Job's pod runs as.
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
@@ -353,3 +363,58 @@ const (
 	LabelSlot     = "ops.sam-farooq.dev/slot"
 	AnnotationRFC = "ops.sam-farooq.dev/slot-rfc3339"
 )
+
+// The defaults below exist twice: once as a kubebuilder marker, which the API
+// server applies, and once here, which is what a reconciler sees when it is
+// handed an object that did not come through the API server. A test reads the
+// generated CRD and fails when the two disagree.
+const (
+	DefaultBackoffLimit          int32 = 2
+	DefaultKeepFailed            int32 = 3
+	DefaultKeepSucceeded         int32 = 7
+	DefaultCleanupTimeoutSeconds int64 = 900
+	DefaultPruneFiles                  = true
+)
+
+// BackoffLimitOrDefault is spec.backoffLimit with the default applied.
+func (s *PostgresBackupSpec) BackoffLimitOrDefault() int32 {
+	if s.BackoffLimit == nil {
+		return DefaultBackoffLimit
+	}
+	return *s.BackoffLimit
+}
+
+// CleanupTimeout is spec.cleanupTimeoutSeconds as a duration, with the
+// default applied.
+func (s *PostgresBackupSpec) CleanupTimeout() time.Duration {
+	if s.CleanupTimeoutSeconds == nil {
+		return time.Duration(DefaultCleanupTimeoutSeconds) * time.Second
+	}
+	return time.Duration(*s.CleanupTimeoutSeconds) * time.Second
+}
+
+// KeepFailedOrDefault is retention.keepFailed with the default applied.
+func (r *RetentionSpec) KeepFailedOrDefault() int32 {
+	if r.KeepFailed == nil {
+		return DefaultKeepFailed
+	}
+	return *r.KeepFailed
+}
+
+// KeepSucceededOrDefault is retention.keepSucceeded with the default applied.
+// It is not a pointer, because its minimum is one and there is no zero to
+// tell apart from absent.
+func (r *RetentionSpec) KeepSucceededOrDefault() int32 {
+	if r.KeepSucceeded == 0 {
+		return DefaultKeepSucceeded
+	}
+	return r.KeepSucceeded
+}
+
+// PruneFilesOrDefault is retention.pruneFiles with the default applied.
+func (r *RetentionSpec) PruneFilesOrDefault() bool {
+	if r.PruneFiles == nil {
+		return DefaultPruneFiles
+	}
+	return *r.PruneFiles
+}

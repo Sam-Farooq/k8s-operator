@@ -48,7 +48,7 @@ func (r *PostgresBackupReconciler) finalize(ctx context.Context, pb *opsv1alpha1
 
 	now := r.Clock.Now().UTC()
 	elapsed := now.Sub(pb.DeletionTimestamp.Time.UTC())
-	budget := time.Duration(pb.Spec.CleanupTimeoutSeconds) * time.Second
+	budget := pb.Spec.CleanupTimeout()
 
 	remaining := make([]string, 0, len(obs.runs))
 	for i := range obs.runs {

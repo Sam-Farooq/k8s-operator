@@ -93,7 +93,7 @@ func BuildJob(pb *opsv1alpha1.PostgresBackup, slot time.Time) *batchv1.Job {
 		dir = mountPath + "/" + spec.Destination.SubPath
 	}
 
-	prune := spec.Retention.PruneFiles == nil || *spec.Retention.PruneFiles
+	prune := spec.Retention.PruneFilesOrDefault()
 
 	// A .part file cannot outlive activeDeadlineSeconds, because the Job is
 	// killed at it. Two extra minutes covers the kubelet's own termination
@@ -108,7 +108,7 @@ func BuildJob(pb *opsv1alpha1.PostgresBackup, slot time.Time) *batchv1.Job {
 		opsv1alpha1.AnnotationRFC: slot.UTC().Format(time.RFC3339),
 	}
 
-	backoff := spec.BackoffLimit
+	backoff := spec.BackoffLimitOrDefault()
 	deadline := spec.ActiveDeadlineSeconds
 	one := int32(1)
 
@@ -210,7 +210,7 @@ func dumpEnv(pb *opsv1alpha1.PostgresBackup, slot time.Time, dir string, prune b
 		{Name: "BACKUP_PREFIX", Value: pb.Spec.Destination.Prefix},
 		{Name: "BACKUP_SLOT", Value: SlotLabel(slot)},
 		{Name: "BACKUP_PRUNE", Value: strconv.FormatBool(prune)},
-		{Name: "BACKUP_KEEP", Value: strconv.Itoa(int(pb.Spec.Retention.KeepSucceeded))},
+		{Name: "BACKUP_KEEP", Value: strconv.Itoa(int(pb.Spec.Retention.KeepSucceededOrDefault()))},
 		{Name: "BACKUP_STALE_MINUTES", Value: strconv.FormatInt(staleMinutes, 10)},
 	}
 }

@@ -299,7 +299,7 @@ func (r *PostgresBackupReconciler) createJob(ctx context.Context, pb *opsv1alpha
 // many deletes were accepted.
 func (r *PostgresBackupReconciler) prune(ctx context.Context, pb *opsv1alpha1.PostgresBackup, obs observation) (int, error) {
 	deleted := 0
-	for _, job := range obs.prunable(pb.Spec.Retention.KeepSucceeded, pb.Spec.Retention.KeepFailed) {
+	for _, job := range obs.prunable(pb.Spec.Retention.KeepSucceededOrDefault(), pb.Spec.Retention.KeepFailedOrDefault()) {
 		if !job.DeletionTimestamp.IsZero() {
 			continue
 		}
