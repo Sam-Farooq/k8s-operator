@@ -137,15 +137,25 @@ func TestConditionsCollisionOutranksEverything(t *testing.T) {
 	}
 }
 
-func TestConditionsSkippedSlotIsDegraded(t *testing.T) {
+func TestConditionsASkippedSlotIsNotDegraded(t *testing.T) {
+	// The first version of this raised Degraded on a skip. A skip advances
+	// lastScheduleTime, so the reconcile a second later has no slot to decide
+	// about and set Degraded straight back to False: the condition was true
+	// for one pass and then gone. Skips are an Event and a tick of
+	// status.skippedSlots instead.
 	d := decision{act: actionSkip, reason: opsv1alpha1.ReasonDeadlineExceeded, message: "11m late"}
-	status := conditionsFor(sample(), observe(nil), d)
-	degraded := cond(status, opsv1alpha1.ConditionDegraded)
-	if degraded.Status != metav1.ConditionTrue || degraded.Reason != opsv1alpha1.ReasonDeadlineExceeded {
-		t.Fatalf("Degraded = %s/%s", degraded.Status, degraded.Reason)
+	skipped := conditionsFor(sample(), observe(nil), d)
+	settled := conditionsFor(sample(), observe(nil), decision{act: actionNone})
+
+	for _, name := range []string{opsv1alpha1.ConditionDegraded, opsv1alpha1.ConditionReady, opsv1alpha1.ConditionRunning} {
+		a, b := cond(skipped, name), cond(settled, name)
+		if a.Status != b.Status || a.Reason != b.Reason {
+			t.Errorf("%s differs between the skip pass (%s/%s) and the pass after it (%s/%s), so it flickers",
+				name, a.Status, a.Reason, b.Status, b.Reason)
+		}
 	}
-	if degraded.Message != "11m late" {
-		t.Errorf("Degraded message = %q, want the decision's own message", degraded.Message)
+	if got := cond(skipped, opsv1alpha1.ConditionDegraded); got.Status != metav1.ConditionFalse {
+		t.Errorf("Degraded = %s on a skip, want False", got.Status)
 	}
 }
 

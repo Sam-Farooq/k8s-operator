@@ -89,6 +89,16 @@ func setConditions(status *opsv1alpha1.PostgresBackupStatus, pb *opsv1alpha1.Pos
 			fmt.Sprintf("Job %s failed the slot at %s: %s", last.job.Name, last.slot.Format(time.RFC3339), orNone(last.reason)))
 	}
 
+	// A skipped slot is not in here. It is an Event and a tick of
+	// status.skippedSlots, because the skip advances lastScheduleTime, so the
+	// next reconcile a second later has no slot to decide about and would set
+	// Degraded back to False. A condition that is true for one reconcile is a
+	// condition nobody can write an alert against.
+	//
+	// A name collision is in here, and the difference is that it is sticky by
+	// construction: lastScheduleTime is deliberately left where it was, so
+	// every following reconcile reaches the same conclusion about the same
+	// slot until somebody changes something.
 	switch {
 	case d.collision != "":
 		setCondition(status, gen, opsv1alpha1.ConditionDegraded, metav1.ConditionTrue,
@@ -98,9 +108,6 @@ func setConditions(status *opsv1alpha1.PostgresBackupStatus, pb *opsv1alpha1.Pos
 		setCondition(status, gen, opsv1alpha1.ConditionDegraded, metav1.ConditionTrue,
 			opsv1alpha1.ReasonLastRunFailed,
 			fmt.Sprintf("the newest finished run, %s, failed: %s", last.job.Name, orNone(last.reason)))
-	case d.act == actionSkip && d.reason != opsv1alpha1.ReasonSuspended:
-		setCondition(status, gen, opsv1alpha1.ConditionDegraded, metav1.ConditionTrue,
-			d.reason, d.message)
 	default:
 		setCondition(status, gen, opsv1alpha1.ConditionDegraded, metav1.ConditionFalse,
 			opsv1alpha1.ReasonHealthy, "No condition needs attention")
