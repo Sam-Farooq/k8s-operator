@@ -27,7 +27,7 @@ docs/restoring.md        how a dump is read back, and what has not been tested
 85 tests. 20 of them drive a real `kube-apiserver` and `etcd` through envtest,
 and none of them needs a cluster, a credential or a network connection once
 the control plane binaries are cached. 2,060 lines of hand written Go, 225
-generated, 2,454 of tests.
+generated, 2,478 of tests.
 
 Nothing here has ever run against a Postgres server. Every number below is
 computable from this repo as it stands, or is labelled as a bound that was
@@ -423,7 +423,9 @@ make check             # everything CI runs
 working directory, so a relative assets path resolves differently in every
 package and envtest fails with `no such file or directory` on `etcd`.
 
-Against a cluster, with a kubeconfig already pointed at it:
+Against a cluster, with a kubeconfig already pointed at it. This block is the
+only one on this page that has not been run from this repo, because there is
+no cluster here:
 
 ```bash
 kubectl apply -f config/crd/bases/
@@ -431,6 +433,13 @@ kubectl apply -f config/samples/
 ./bin/manager --leader-elect --metrics-bind-address=0
 kubectl get pgbackup -A
 ```
+
+The first two lines are not unverified in the way that sounds. `config/crd/bases`
+is the exact directory envtest loads into a real `kube-apiserver` 1.32.0 at
+the start of the suite, and `TestSamplesApplyCleanly` creates everything in
+`config/samples` against it and reads it back through the typed client. What
+has not been exercised is the manager's own startup path: `ctrl.NewManager`,
+leader election and the signal handler.
 
 `pgbackup` and `pgb` are both short names. The printer columns show the
 schedule, whether it is suspended, `Ready`, the last success and the next
