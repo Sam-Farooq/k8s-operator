@@ -1,0 +1,47 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: postgresbackup-manager
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - batch
+  resources:
+  - jobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ops.sam-farooq.dev
+  resources:
+  - postgresbackups
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ops.sam-farooq.dev
+  resources:
+  - postgresbackups/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - ops.sam-farooq.dev
+  resources:
+  - postgresbackups/status
+  verbs:
+  - get
+  - patch
+  - update
