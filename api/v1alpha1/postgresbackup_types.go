@@ -326,18 +326,20 @@ const (
 // requires it to be a CamelCase token, so they are constants rather than
 // sentences assembled at the call site.
 const (
-	ReasonScheduled         = "Scheduled"
-	ReasonSuspended         = "Suspended"
-	ReasonInvalidSchedule   = "InvalidSchedule"
-	ReasonJobRunning        = "JobRunning"
-	ReasonNoJobRunning      = "NoJobRunning"
-	ReasonLastRunSucceeded  = "LastRunSucceeded"
-	ReasonLastRunFailed     = "LastRunFailed"
-	ReasonNoRunsYet         = "NoRunsYet"
-	ReasonSlotsSkipped      = "SlotsSkipped"
-	ReasonJobNameCollision  = "JobNameCollision"
-	ReasonCleanupAbandoned  = "CleanupAbandoned"
-	ReasonCleanupInProgress = "CleanupInProgress"
+	ReasonScheduled            = "Scheduled"
+	ReasonSuspended            = "Suspended"
+	ReasonInvalidSchedule      = "InvalidSchedule"
+	ReasonJobRunning           = "JobRunning"
+	ReasonNoJobRunning         = "NoJobRunning"
+	ReasonLastRunSucceeded     = "LastRunSucceeded"
+	ReasonLastRunFailed        = "LastRunFailed"
+	ReasonNoRunsYet            = "NoRunsYet"
+	ReasonDeadlineExceeded     = "StartingDeadlineExceeded"
+	ReasonConcurrencyForbidden = "ConcurrencyForbidden"
+	ReasonHealthy              = "Healthy"
+	ReasonJobNameCollision     = "JobNameCollision"
+	ReasonCleanupAbandoned     = "CleanupAbandoned"
+	ReasonCleanupInProgress    = "CleanupInProgress"
 )
 
 // Finalizer is removed only once owned Jobs are gone, or once
