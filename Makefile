@@ -81,7 +81,7 @@ test-race: envtest ## Run every test under the race detector.
 
 .PHONY: build
 build: ## Build the manager into ./bin.
-	go build -ldflags "-X main.version=$(VERSION)" -o $(LOCALBIN)/manager ./cmd
+	go build -ldflags "-X main.operatorVersion=$(VERSION)" -o $(LOCALBIN)/manager ./cmd
 
 .PHONY: check
 check: fmt-check vet lint verify-manifests test ## What CI runs.
