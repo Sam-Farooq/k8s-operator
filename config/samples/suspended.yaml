@@ -1,0 +1,23 @@
+# The same object with the schedule stopped. A Job already running is left to
+# finish; only new ones are withheld. The object reports Ready=False with
+# reason Suspended, and Degraded stays False because the suspension was
+# asked for.
+#
+# Every field below the first three is left out on purpose, to exercise the
+# CRD's defaults.
+apiVersion: ops.sam-farooq.dev/v1alpha1
+kind: PostgresBackup
+metadata:
+  name: ledger-hourly
+  namespace: data
+spec:
+  schedule: "0 * * * *"
+  suspend: true
+  image: postgres:17.2-alpine
+  source:
+    host: ledger-primary.data.svc.cluster.local
+    database: ledger
+    secretName: ledger-backup-role
+  destination:
+    claimName: pg-backups
+    prefix: ledger

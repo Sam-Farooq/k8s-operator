@@ -1,0 +1,49 @@
+# A nightly logical backup of one database onto a claim the Job mounts.
+#
+# The Secret is read by the kubelet when it starts the pod, not by the
+# operator. Create it separately, with at least CONNECT on the database and
+# SELECT on everything being dumped:
+#
+#   kubectl create secret generic orders-backup-role \
+#     --from-literal=username=backup \
+#     --from-literal=password='...'
+apiVersion: ops.sam-farooq.dev/v1alpha1
+kind: PostgresBackup
+metadata:
+  name: orders-nightly
+  namespace: data
+spec:
+  # 02:30 UTC, every day. Five fields, no names, no @daily.
+  schedule: "30 2 * * *"
+
+  image: postgres:17.2-alpine
+
+  source:
+    host: orders-primary.data.svc.cluster.local
+    port: 5432
+    database: orders
+    secretName: orders-backup-role
+    sslMode: require
+
+  destination:
+    claimName: pg-backups
+    prefix: orders
+    subPath: orders/daily
+
+  retention:
+    keepSucceeded: 7
+    keepFailed: 3
+    pruneFiles: true
+
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 600
+  activeDeadlineSeconds: 3600
+  backoffLimit: 2
+  cleanupTimeoutSeconds: 900
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 1Gi
